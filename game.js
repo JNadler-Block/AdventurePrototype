@@ -123,7 +123,8 @@ class MainMenu extends Phaser.Scene {
         });
 
         let newgame = this.add.text(w * 0.22, h * 1.1, 'Start Game');
-        newgame.setFontSize(70);
+        newgame.setStroke(0x000000, 1);
+        newgame.setFontSize(80);
         newgame.setAlign('center');
         this.time.delayedCall(900, () => {
             this.tweens.add({
@@ -133,11 +134,11 @@ class MainMenu extends Phaser.Scene {
             });
         });
         newgame.setInteractive()
-            .on('pointerover', () => newgame.setFontSize(90))
-            .on('pointerout', () => newgame.setFontSize(70))
+            .on('pointerover', () => newgame.setStroke(0x000000, 15))
+            .on('pointerout', () => newgame.setStroke(0x000000, 1))
             .on('pointerdown', () => {
                 this.cameras.main.fadeOut(500, 0,0,0);
-                this.scene.start('intro');
+                this.scene.start('demo1');
             });
     }
 }
@@ -236,20 +237,6 @@ class Demo2 extends AdventureScene {
     }
 }
 
-class Intro extends Phaser.Scene {
-    constructor() {
-        super('intro')
-    }
-    create() {
-        this.add.text(50,50, "Adventure awaits!").setFontSize(50);
-        this.add.text(50,100, "Click anywhere to begin.").setFontSize(20);
-        this.input.on('pointerdown', () => {
-            this.cameras.main.fade(1000, 0,0,0);
-            this.time.delayedCall(1000, () => this.scene.start('demo1'));
-        });
-    }
-}
-
 class Outro extends Phaser.Scene {
     constructor() {
         super('outro');
@@ -269,7 +256,7 @@ const game = new Phaser.Game({
         width: 1920,
         height: 1080
     },
-    scene: [GameStudio, LoadingScreen, MainMenu, Intro, Demo1, Demo2, Outro],
+    scene: [GameStudio, LoadingScreen, MainMenu, Demo1, Demo2, Outro],
     title: "Adventure Game",
 });
 
