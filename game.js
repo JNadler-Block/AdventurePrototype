@@ -35,8 +35,6 @@ class LoadingScreen extends Phaser.Scene {
         let w = this.game.config.width;
         let h = this.game.config.height;
         
-        this.cameras.main.backgroundColor = Phaser.Display.Color.HexStringToColor("#212121");
-        
         this.cameras.main.fadeIn(1000);
         let castle = this.add.image(w * 0.72, h * 0.5, 'castle');
         castle.scale = this.game.config.height * 0.00165;
@@ -101,8 +99,6 @@ class MainMenu extends Phaser.Scene {
     create() {
         let w = this.game.config.width;
         let h = this.game.config.height;
-
-        this.cameras.main.backgroundColor = Phaser.Display.Color.HexStringToColor("#212121");
         
         this.cameras.main.fadeIn(500);
         let vampire = this.add.image(w * 0.75, h * 0.5, 'vampire');
@@ -138,7 +134,42 @@ class MainMenu extends Phaser.Scene {
             .on('pointerout', () => newgame.setStroke(0x000000, 1))
             .on('pointerdown', () => {
                 this.cameras.main.fadeOut(500, 0,0,0);
-                this.scene.start('demo1');
+                this.scene.start('scene1');
+            });
+    }
+}
+
+class Scene1 extends AdventureScene {
+    constructor() {
+        super("scene1", "First Room");
+    }
+
+    preload() {
+        this.load.image('door', 'assets/Door.png');
+        this.load.image('coin', 'assets/Coin.png');
+    }
+
+    onEnter() {
+        let door = this.add.image(this.w * 0.692, this.h * 0.112, 'door')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("I wonder where it goes..."))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.gotoScene('demo1'));
+
+        let c = this.add.image(this.w * 0.5, this.h * 0.5, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => {
+                this.showMessage("You gained 1 coin!");
+                this.increaseCoins(1);
+                this.tweens.add({
+                    targets: c,
+                    y: `-=${2 * this.s}`,
+                    alpha: { from: 1, to: 0 },
+                    duration: 500,
+                    onComplete: () => c.destroy()
+                });
             });
     }
 }
@@ -155,14 +186,23 @@ class Demo1 extends AdventureScene {
             .setInteractive()
             .on('pointerover', () => this.showMessage("Metal, bent."))
             .on('pointerdown', () => {
-                this.showMessage("No touching!");
+                // this.showMessage("No touching!");
+                // this.tweens.add({
+                //     targets: clip,
+                //     x: '+=' + this.s,
+                //     repeat: 2,
+                //     yoyo: true,
+                //     ease: 'Sine.inOut',
+                //     duration: 100
+                // });
+                this.showMessage("You pick up the paper clip.");
+                this.gainItem('paper clip');
                 this.tweens.add({
                     targets: clip,
-                    x: '+=' + this.s,
-                    repeat: 2,
-                    yoyo: true,
-                    ease: 'Sine.inOut',
-                    duration: 100
+                    y: `-=${2 * this.s}`,
+                    alpha: { from: 1, to: 0 },
+                    duration: 500,
+                    onComplete: () => clip.destroy()
                 });
             });
 
@@ -256,7 +296,8 @@ const game = new Phaser.Game({
         width: 1920,
         height: 1080
     },
-    scene: [GameStudio, LoadingScreen, MainMenu, Demo1, Demo2, Outro],
+    backgroundColor: 0x212121,
+    scene: [Scene1, GameStudio, LoadingScreen, MainMenu, Demo1, Demo2, Outro],
     title: "Adventure Game",
 });
 

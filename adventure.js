@@ -2,6 +2,7 @@ class AdventureScene extends Phaser.Scene {
 
     init(data) {
         this.inventory = data.inventory || [];
+        this.coins = data.coins || 0;
     }
 
     constructor(key, name) {
@@ -18,6 +19,8 @@ class AdventureScene extends Phaser.Scene {
 
         this.cameras.main.setBackgroundColor('#444');
         this.cameras.main.fadeIn(this.transitionDuration, 0, 0, 0);
+
+        this.add.rectangle(0, 0, this.w * 0.75, this.h * 0.223).setOrigin(0, 0).setFillStyle(0x212121);
 
         this.add.rectangle(this.w * 0.75, 0, this.w * 0.25, this.h).setOrigin(0, 0).setFillStyle(0);
         this.add.text(this.w * 0.75 + this.s, this.s)
@@ -41,6 +44,7 @@ class AdventureScene extends Phaser.Scene {
             .setStyle({ fontSize: `${2 * this.s}px` })
             .setInteractive({useHandCursor: true})
             .on('pointerover', () => this.showMessage('Fullscreen?'))
+            .on('pointerout', () => this.stopMessage())
             .on('pointerdown', () => {
                 if (this.scale.isFullscreen) {
                     this.scale.stopFullscreen();
@@ -48,6 +52,8 @@ class AdventureScene extends Phaser.Scene {
                     this.scale.startFullscreen();
                 }
             });
+        this.coinText;
+        this.initializeCoins();
 
         this.onEnter();
 
@@ -55,11 +61,15 @@ class AdventureScene extends Phaser.Scene {
 
     showMessage(message) {
         this.messageBox.setText(message);
+        this.messageBox.setAlpha(1);
+    }
+
+    stopMessage() {
         this.tweens.add({
             targets: this.messageBox,
             alpha: { from: 1, to: 0 },
             easing: 'Quintic.in',
-            duration: 4 * this.transitionDuration
+            duration: 0.2 * this.transitionDuration
         });
     }
 
@@ -140,8 +150,35 @@ class AdventureScene extends Phaser.Scene {
     gotoScene(key) {
         this.cameras.main.fade(this.transitionDuration, 0, 0, 0);
         this.time.delayedCall(this.transitionDuration, () => {
-            this.scene.start(key, { inventory: this.inventory });
+            this.scene.start(key, {
+                inventory: this.inventory,
+                coins: this.coins,
+            });
         });
+    }
+
+    initializeCoins() {
+        let coin = this.add.image(this.w-15*this.s, this.h-2*this.s, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage('Coins: ' + this.coins))
+            .on('pointerout', () => this.stopMessage());
+        coin.scale = this.s * 0.04;
+
+        this.coinText = this.add.text(this.w - 20 *this.s, this.h-3.2*this.s, this.coins)
+            .setStyle({ fontSize: `${3 * this.s}px` });
+    }
+
+    increaseCoins(coin) {
+        this.coins += coin;
+        this.coinText.setText(this.coins);
+    }
+
+    gotoItem() {
+
+    }
+
+    initializeCharacter() {
+
     }
 
     onEnter() {
