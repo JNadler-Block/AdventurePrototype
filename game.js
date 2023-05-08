@@ -147,30 +147,48 @@ class Scene1 extends AdventureScene {
     preload() {
         this.load.image('door', 'assets/Door.png');
         this.load.image('coin', 'assets/Coin.png');
+        this.load.image('vampire', 'assets/Vampire.png');
     }
 
     onEnter() {
-        let door = this.add.image(this.w * 0.692, this.h * 0.112, 'door')
+        this.door = this.add.image(this.w * 0.692, this.h * 0.112, 'door')
             .setInteractive()
             .on('pointerover', () => this.showMessage("I wonder where it goes..."))
             .on('pointerout', () => this.stopMessage())
-            .on('pointerdown', () => this.gotoScene('demo1'));
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.door));
 
-        let c = this.add.image(this.w * 0.5, this.h * 0.5, 'coin')
+        this.c = this.add.image(this.w * 0.5, this.h * 0.5, 'coin')
             .setInteractive()
             .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
             .on('pointerout', () => this.stopMessage())
-            .on('pointerdown', () => {
-                this.showMessage("You gained 1 coin!");
-                this.increaseCoins(1);
-                this.tweens.add({
-                    targets: c,
-                    y: `-=${2 * this.s}`,
-                    alpha: { from: 1, to: 0 },
-                    duration: 500,
-                    onComplete: () => c.destroy()
-                });
-            });
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c));
+
+        this.vampire = this.initializeCharacter();
+        this.o = this.vampire;
+        this.x = 0;
+        this.y = 0;
+        this.p = this.input.activePointer;
+    }
+
+    update() {
+        if (this.o != this.vampire && this.p.isDown && this.p.position != this.p.prevPosition) {
+            let dis = Phaser.Math.Distance.Between(this.p.position.x, this.p.position.y, this.o.x, this.o.y);
+            if (dis > 100 || dis < -100) {
+                this.o = this.vampire;
+            }
+        }
+        if(this.o != this.vampire) {
+            this.moveAndPickup(this.vampire, this.o);
+        }
+        if(this.p.isDown) {
+            this.move(this.vampire, this.p.position);
+        }
+
+        let d = Phaser.Math.Distance.Between(this.vampire.x, this.vampire.y, this.x, this.y);
+        if (d < 5) {
+            this.vampire.setVelocityX(0);
+            this.vampire.setVelocityY(0);
+        }
     }
 }
 
@@ -295,6 +313,10 @@ const game = new Phaser.Game({
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 1920,
         height: 1080
+    },
+    physics: {
+        default: 'arcade',
+        //arcade: { debug: true }
     },
     backgroundColor: 0x212121,
     scene: [Scene1, GameStudio, LoadingScreen, MainMenu, Demo1, Demo2, Outro],

@@ -178,7 +178,58 @@ class AdventureScene extends Phaser.Scene {
     }
 
     initializeCharacter() {
+        let vampire = this.physics.add.image(this.w * 0.1, this.h * 0.6, 'vampire');
+        vampire.scale = this.s * 0.05;
+        return vampire;
+    }
 
+    move(vampire, destination) {
+        this.x = destination.x;
+        this.y = destination.y;
+        if (this.x > this.w * 0.702) {
+            this.x = this.w * 0.702;
+        }
+        else if(this.x < this.w * 0.07) {
+            this.x = this.w * 0.07;
+        }
+        if (this.y < this.h * 0.21) {
+            this.y = this.h * 0.21;
+        }
+        else if(this.y > this.h * 0.83) {
+            this.y = this.h * 0.83;
+        }
+        let x = this.x;
+        let y = this.y;
+        this.physics.moveToObject(vampire, {x , y}, this.w * 0.15);
+    }
+
+    moveAndPickup(vampire, object) {
+        this.o = object;
+        this.move(vampire, object);
+        let d = Phaser.Math.Distance.Between(this.vampire.x, this.vampire.y, this.x, this.y);
+        if (d < 10) {
+            if (object.texture.key == "coin") {
+                this.pickUpCoin(object);
+            }
+            else if (object.texture.key == "door") {
+                this.gotoScene('demo1');
+            }
+            this.vampire.setVelocityX(0);
+            this.vampire.setVelocityY(0);
+            this.o = this.vampire;
+        }
+    }
+
+    pickUpCoin(object) {
+        this.showMessage("You gained 1 coin!");
+        this.increaseCoins(1);
+        this.tweens.add({
+            targets: object,
+            y: `-=${2 * this.s}`,
+            alpha: { from: 1, to: 0 },
+            duration: 500,
+            onComplete: () => object.destroy()
+        });
     }
 
     onEnter() {
