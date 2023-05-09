@@ -84,7 +84,7 @@ class AdventureScene extends Phaser.Scene {
                 targets: this.messageBox,
                 alpha: { from: 1, to: 0 },
                 easing: 'Quintic.in',
-                duration: 0.3 * this.transitionDuration,
+                duration: 0.4 * this.transitionDuration,
                 onUpdate: () => {
                     if (this.switchDisplay) {
                         t.stop();
@@ -118,10 +118,10 @@ class AdventureScene extends Phaser.Scene {
             this.showMessage("\"Hi I'm Dookin.\"");
             this.displayMessageBox = false;
             this.showMessageButton("       Next");
-            this.dookinTimes++;
             this.messageButton.setInteractive()
                 .on('pointerdown', () => {
                     this.time.delayedCall(100, () => {
+                        this.dookinTimes = 1;
                         this.talkToDookin();
                     });
                 });
@@ -131,10 +131,10 @@ class AdventureScene extends Phaser.Scene {
             this.showMessage("\"I'm so thirsty. If you have any blood on you, I can help you in return.\"");
             this.displayMessageBox = false;
             this.showMessageButton("       Next");
-            this.dookinTimes++;
             this.messageButton.setInteractive()
                 .on('pointerdown', () => {
                     this.time.delayedCall(100, () => {
+                        this.dookinTimes = 2;
                         this.talkToDookin();
                     });
                 });
@@ -149,7 +149,7 @@ class AdventureScene extends Phaser.Scene {
             }
             this.displayMessageBox = false;
             this.showMessageButton("  Yes");
-            this.messageButton.setInteractive()
+            let m = this.messageButton.setInteractive()
                 .on('pointerdown', () => {
                     if (this.hasItem('blood vial')) {
                         this.time.delayedCall(100, () => {
@@ -160,6 +160,16 @@ class AdventureScene extends Phaser.Scene {
                             this.stopMessageButton();
                             this.stopMessageButton2();
                             this.dookinTimes = 4;
+                        });
+                    }
+                    else {
+                        this.tweens.add({
+                            targets: m,
+                            x: '+=' + this.s,
+                            repeat: 1,
+                            yoyo: true,
+                            ease: 'Sine.inOut',
+                            duration: 100
                         });
                     }
                 });
@@ -328,6 +338,9 @@ class AdventureScene extends Phaser.Scene {
                 this.pickUpCoin(object);
             }
             else if (object.texture.key == "door" || object.texture.key == "locked door") {
+                if (object.texture.key == "locked door") {
+                    this.loseItem('key');
+                }
                 this.gotoScene(this.nextScene);
             }
             else {
@@ -367,6 +380,9 @@ class AdventureScene extends Phaser.Scene {
         if (this.o != this.vampire && this.p.isDown && this.p.position != this.p.prevPosition) {
             let dis = Phaser.Math.Distance.Between(this.p.position.x, this.p.position.y, this.o.x, this.o.y);
             if (dis > 100 || dis < -100) {
+                this.o = this.vampire;
+            }
+            else if (this.o.texture.key == "dookin" && (dis > 300 || dis < -300)) {
                 this.o = this.vampire;
             }
         }

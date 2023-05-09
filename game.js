@@ -202,7 +202,7 @@ class Scene2 extends AdventureScene {
                     this.tweens.add({
                         targets: this.door,
                         x: '+=' + this.s,
-                        repeat: 2,
+                        repeat: 1,
                         yoyo: true,
                         ease: 'Sine.inOut',
                         duration: 100
@@ -267,7 +267,6 @@ class Scene3 extends AdventureScene {
             .on('pointerout', () => this.stopMessage())
             .on('pointerdown', () => {
                 if (this.hasItem('key')) {
-                    this.loseItem('key');
                     this.moveAndPickup(this.vampire, this.door);
                 }
                 else {
@@ -275,12 +274,12 @@ class Scene3 extends AdventureScene {
                     this.tweens.add({
                         targets: this.door,
                         x: '+=' + this.s,
-                        repeat: 2,
+                        repeat: 1,
                         yoyo: true,
                         ease: 'Sine.inOut',
                         duration: 100
                     });
-                    this.time.delayedCall(50, () => {
+                    this.time.delayedCall(60, () => {
                         this.vampire.setVelocityX(0);
                         this.vampire.setVelocityY(0);
                     });
@@ -364,12 +363,12 @@ class Scene4 extends AdventureScene {
                     this.tweens.add({
                         targets: this.door,
                         x: '+=' + this.s,
-                        repeat: 2,
+                        repeat: 1,
                         yoyo: true,
                         ease: 'Sine.inOut',
                         duration: 100
                     });
-                    this.time.delayedCall(55, () => {
+                    this.time.delayedCall(60, () => {
                         this.vampire.setVelocityX(0);
                         this.vampire.setVelocityY(0);
                     });
@@ -383,7 +382,7 @@ class Scene4 extends AdventureScene {
         this.dookin.scale = this.s * 0.042;
         this.dookin.setInteractive()
             .on('pointerover', () => {
-                if (this.dookinTimes > 2) {
+                if (this.dookinTimes > 3) {
                     this.showMessage("\"Hello there!\"");
                 }
                 else {
