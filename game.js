@@ -134,7 +134,9 @@ class MainMenu extends Phaser.Scene {
             .on('pointerout', () => newgame.setStroke(0x000000, 1))
             .on('pointerdown', () => {
                 this.cameras.main.fadeOut(500, 0,0,0);
-                this.scene.start('scene1');
+                this.time.delayedCall(50, () => {
+                    this.scene.start('scene1');
+                });
             });
     }
 }
@@ -151,6 +153,8 @@ class Scene1 extends AdventureScene {
     }
 
     onEnter() {
+        this.showMessage("Click to move around.");
+        
         this.door = this.add.image(this.w * 0.692, this.h * 0.112, 'door')
             .setInteractive()
             .on('pointerover', () => this.showMessage("I wonder where it goes..."))
@@ -164,145 +168,289 @@ class Scene1 extends AdventureScene {
             .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c));
 
         this.vampire = this.initializeCharacter();
+        this.nextScene = 'scene2'
         this.o = this.vampire;
         this.x = 0;
         this.y = 0;
         this.p = this.input.activePointer;
     }
-
-    update() {
-        if (this.o != this.vampire && this.p.isDown && this.p.position != this.p.prevPosition) {
-            let dis = Phaser.Math.Distance.Between(this.p.position.x, this.p.position.y, this.o.x, this.o.y);
-            if (dis > 100 || dis < -100) {
-                this.o = this.vampire;
-            }
-        }
-        if(this.o != this.vampire) {
-            this.moveAndPickup(this.vampire, this.o);
-        }
-        if(this.p.isDown) {
-            this.move(this.vampire, this.p.position);
-        }
-
-        let d = Phaser.Math.Distance.Between(this.vampire.x, this.vampire.y, this.x, this.y);
-        if (d < 5) {
-            this.vampire.setVelocityX(0);
-            this.vampire.setVelocityY(0);
-        }
-    }
 }
 
-class Demo1 extends AdventureScene {
+class Scene2 extends AdventureScene {
     constructor() {
-        super("demo1", "First Room");
+        super("scene2", "Second Room");
+    }
+
+    preload() {
+        this.load.image('door', 'assets/Door.png');
+        this.load.image('coin', 'assets/Coin.png');
+        this.load.image('vampire', 'assets/Vampire.png');
+        this.load.image('blood vial', 'assets/BloodVial.png');
     }
 
     onEnter() {
-
-        let clip = this.add.text(this.w * 0.3, this.w * 0.3, "📎 paperclip")
-            .setFontSize(this.s * 2)
+        this.door = this.add.image(this.w * 0.692, this.h * 0.112, 'door')
             .setInteractive()
-            .on('pointerover', () => this.showMessage("Metal, bent."))
+            .on('pointerover', () => this.showMessage("Another door?"))
+            .on('pointerout', () => this.stopMessage())
             .on('pointerdown', () => {
-                // this.showMessage("No touching!");
-                // this.tweens.add({
-                //     targets: clip,
-                //     x: '+=' + this.s,
-                //     repeat: 2,
-                //     yoyo: true,
-                //     ease: 'Sine.inOut',
-                //     duration: 100
-                // });
-                this.showMessage("You pick up the paper clip.");
-                this.gainItem('paper clip');
-                this.tweens.add({
-                    targets: clip,
-                    y: `-=${2 * this.s}`,
-                    alpha: { from: 1, to: 0 },
-                    duration: 500,
-                    onComplete: () => clip.destroy()
-                });
+                if (this.hasItem('blood vial')) {
+                    this.moveAndPickup(this.vampire, this.door);
+                }
+                else {
+                    this.showMessage("You may want that tasty blood before you leave.");
+                    this.tweens.add({
+                        targets: this.door,
+                        x: '+=' + this.s,
+                        repeat: 2,
+                        yoyo: true,
+                        ease: 'Sine.inOut',
+                        duration: 100
+                    });
+                    this.time.delayedCall(55, () => {
+                        this.vampire.setVelocityX(0);
+                        this.vampire.setVelocityY(0);
+                    });
+                }
             });
 
-        let key = this.add.text(this.w * 0.5, this.w * 0.1, "🔑 key")
-            .setFontSize(this.s * 2)
+        this.blood = this.add.image(this.w * 0.3, this.h * 0.65, 'blood vial')
             .setInteractive()
-            .on('pointerover', () => {
-                this.showMessage("It's a nice key.")
-            })
-            .on('pointerdown', () => {
-                this.showMessage("You pick up the key.");
-                this.gainItem('key');
-                this.tweens.add({
-                    targets: key,
-                    y: `-=${2 * this.s}`,
-                    alpha: { from: 1, to: 0 },
-                    duration: 500,
-                    onComplete: () => key.destroy()
-                });
-            })
+            .on('pointerover', () => this.showMessage("Mmmm blood!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.blood));
 
-        let door = this.add.text(this.w * 0.1, this.w * 0.15, "🚪 locked door")
-            .setFontSize(this.s * 2)
+        this.c1 = this.add.image(this.w * 0.5, this.h * 0.8, 'coin')
             .setInteractive()
-            .on('pointerover', () => {
-                if (this.hasItem("key")) {
-                    this.showMessage("You've got the key for this door.");
-                } else {
-                    this.showMessage("It's locked. Can you find a key?");
-                }
-            })
-            .on('pointerdown', () => {
-                if (this.hasItem("key")) {
-                    this.loseItem("key");
-                    this.showMessage("*squeak*");
-                    door.setText("🚪 unlocked door");
-                    this.gotoScene('demo2');
-                }
-            })
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c1));
+        
+        this.c2 = this.add.image(this.w * 0.7, this.h * 0.4, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c2));
+        
+        this.c3 = this.add.image(this.w * 0.3, this.h * 0.3, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c3));
 
+        this.nextScene = 'scene3'
+        this.vampire = this.initializeCharacter();
+        this.o = this.vampire;
+        this.x = 0;
+        this.y = 0;
+        this.p = this.input.activePointer;
     }
 }
 
-class Demo2 extends AdventureScene {
+class Scene3 extends AdventureScene {
     constructor() {
-        super("demo2", "The second room has a long name (it truly does).");
+        super("scene3", "Third Room");
     }
+
+    preload() {
+        this.load.image('locked door', 'assets/LockedDoor.png');
+        this.load.image('coin', 'assets/Coin.png');
+        this.load.image('vampire', 'assets/Vampire.png');
+        this.load.image('key', 'assets/Key.png');
+    }
+
     onEnter() {
-        this.add.text(this.w * 0.3, this.w * 0.4, "just go back")
-            .setFontSize(this.s * 2)
+        this.door = this.add.image(this.w * 0.692, this.h * 0.112, 'locked door')
+            .setScale(this.s * 0.06, this.s * 0.06)
             .setInteractive()
-            .on('pointerover', () => {
-                this.showMessage("You've got no other choice, really.");
-            })
+            .on('pointerover', () => this.showMessage("Hmm this door looks locked."))
+            .on('pointerout', () => this.stopMessage())
             .on('pointerdown', () => {
-                this.gotoScene('demo1');
+                if (this.hasItem('key')) {
+                    this.loseItem('key');
+                    this.moveAndPickup(this.vampire, this.door);
+                }
+                else {
+                    this.showMessage("This door looks like it needs a key.");
+                    this.tweens.add({
+                        targets: this.door,
+                        x: '+=' + this.s,
+                        repeat: 2,
+                        yoyo: true,
+                        ease: 'Sine.inOut',
+                        duration: 100
+                    });
+                    this.time.delayedCall(50, () => {
+                        this.vampire.setVelocityX(0);
+                        this.vampire.setVelocityY(0);
+                    });
+                }
+                this.door.x = this.w * 0.692;
+                this.door.y = this.h * 0.112;
             });
 
-        let finish = this.add.text(this.w * 0.6, this.w * 0.2, '(finish the game)')
+        this.key = this.add.image(this.w * 0.7, this.h * 0.85, 'key')
+            .setScale(this.s * 0.03, this.s * 0.03)
             .setInteractive()
-            .on('pointerover', () => {
-                this.showMessage('*giggles*');
-                this.tweens.add({
-                    targets: finish,
-                    x: this.s + (this.h - 2 * this.s) * Math.random(),
-                    y: this.s + (this.h - 2 * this.s) * Math.random(),
-                    ease: 'Sine.inOut',
-                    duration: 500
-                });
-            })
-            .on('pointerdown', () => this.gotoScene('outro'));
+            .on('pointerover', () => this.showMessage("It looks useful."))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.key));
+
+        this.c1 = this.add.image(this.w * 0.5, this.h * 0.8, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c1));
+        
+        this.c2 = this.add.image(this.w * 0.6, this.h * 0.5, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c2));
+        
+        this.c3 = this.add.image(this.w * 0.3, this.h * 0.3, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c3));
+
+        this.c4 = this.add.image(this.w * 0.2, this.h * 0.9, 'coin')
+            .setInteractive()
+            .on('pointerover', () => this.showMessage("That looks shiny.\nGo and pick it up!"))
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => this.moveAndPickup(this.vampire, this.c4));
+
+        this.nextScene = 'scene4'
+        this.vampire = this.initializeCharacter();
+        this.o = this.vampire;
+        this.x = 0;
+        this.y = 0;
+        this.p = this.input.activePointer;
     }
 }
 
-class Outro extends Phaser.Scene {
+class Scene4 extends AdventureScene {
     constructor() {
-        super('outro');
+        super("scene4", "Fourth Room");
     }
+
+    preload() {
+        this.load.image('locked door', 'assets/LockedDoor.png');
+        this.load.image('coin', 'assets/Coin.png');
+        this.load.image('vampire', 'assets/Vampire.png');
+        this.load.image('dookin', 'assets/BlueVampire.png');
+        this.load.image('key', 'assets/Key.png');
+    }
+
+    onEnter() {
+        this.door = this.add.image(this.w * 0.692, this.h * 0.112, 'locked door')
+            .setScale(this.s * 0.06, this.s * 0.06)
+            .setInteractive()
+            .on('pointerover', () => {
+                if (this.hasItem('key')) {
+                    this.showMessage("Dookin's key should unlock it.");
+                }
+                else {
+                    this.showMessage("It's locked, but maybe the vampire can help.");
+                }
+            })
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => {
+                if (this.hasItem('key')) {
+                    this.moveAndPickup(this.vampire, this.door);
+                }
+                else {
+                    this.showMessage("This door looks like it needs a key.");
+                    this.tweens.add({
+                        targets: this.door,
+                        x: '+=' + this.s,
+                        repeat: 2,
+                        yoyo: true,
+                        ease: 'Sine.inOut',
+                        duration: 100
+                    });
+                    this.time.delayedCall(55, () => {
+                        this.vampire.setVelocityX(0);
+                        this.vampire.setVelocityY(0);
+                    });
+                }
+                this.door.x = this.w * 0.692;
+                this.door.y = this.h * 0.112;
+            });
+
+        this.dookinTimes = 0;
+        this.dookin = this.physics.add.image(this.w * 0.55, this.h * 0.3, 'dookin');
+        this.dookin.scale = this.s * 0.042;
+        this.dookin.setInteractive()
+            .on('pointerover', () => {
+                if (this.dookinTimes > 2) {
+                    this.showMessage("\"Hello there!\"");
+                }
+                else {
+                    this.showMessage("That vampire looks thirsty.");
+                }
+            })
+            .on('pointerout', () => this.stopMessage())
+            .on('pointerdown', () => {
+                this.moveAndPickup(this.vampire, this.dookin);
+            });
+
+        this.nextScene = 'end'
+        this.vampire = this.initializeCharacter();
+        this.o = this.vampire;
+        this.x = 0;
+        this.y = 0;
+        this.p = this.input.activePointer;
+    }
+}
+
+class End extends Phaser.Scene {
+    init(data) {
+        this.inventory = data.inventory || [];
+        this.coins = data.coins || 0;
+    }
+    
+    constructor() {
+        super('end');
+    }
+
+    preload() {
+        this.load.image('castle', 'assets/Castle.png');
+    }
+
     create() {
-        this.add.text(50, 50, "That's all!").setFontSize(50);
-        this.add.text(50, 100, "Click anywhere to restart.").setFontSize(20);
-        this.input.on('pointerdown', () => this.scene.start('intro'));
+        let w = this.game.config.width;
+        let h = this.game.config.height;
+        
+        this.cameras.main.fadeIn(1000);
+        let castle = this.add.image(w * 0.72, h * 0.5, 'castle');
+        castle.scale = this.game.config.height * 0.00165;
+        
+        let loading = this.add.text(w * 0.13, h * 0.3, 'You spent your\n' + this.coins + ' coins on\nblood vials and\nlived happily\never after.');
+        loading.setStroke(0x000000, 1);
+        loading.setFontSize(60);
+
+        let replay = this.add.text(w * 0.13, h * 1.1, 'Play Again')
+            .setStroke(0x000000, 1)
+            .setFontSize(80)
+            .setAlign('center');
+        this.time.delayedCall(1500, () => {
+            this.tweens.add({
+                targets: replay,
+                y: h * 0.75,
+                duration: 500, 
+            });
+        });
+        replay.setInteractive()
+            .on('pointerover', () => replay.setStroke(0x000000, 15))
+            .on('pointerout', () => replay.setStroke(0x000000, 1))
+            .on('pointerdown', () => {
+                this.cameras.main.fadeOut(500, 0,0,0);
+                this.time.delayedCall(50, () => {
+                    this.scene.start('main menu');
+                });
+            });
+
     }
 }
 
@@ -319,7 +467,7 @@ const game = new Phaser.Game({
         //arcade: { debug: true }
     },
     backgroundColor: 0x212121,
-    scene: [Scene1, GameStudio, LoadingScreen, MainMenu, Demo1, Demo2, Outro],
+    scene: [GameStudio, LoadingScreen, MainMenu, Scene1, Scene2, Scene3, Scene4, End],
     title: "Adventure Game",
 });
 
